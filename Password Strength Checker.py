@@ -1,9 +1,5 @@
 # Password Strength Checker 
-import os
-os.system('pip install zxcvbn')
 import getpass
-import requests
-import hashlib
 from string import ascii_lowercase, ascii_uppercase, digits, punctuation
 from zxcvbn import zxcvbn
 from datetime import datetime
@@ -17,7 +13,6 @@ CATEGORIES = {
     'symbols': {'name': 'symbols', 'weight': 4},
     'common': {'name': 'common', 'weight': -4},
     'dictionary': {'name': 'dictionary', 'weight': -2},
-    'leaked': {'name': 'leaked', 'weight': -6},
     'age': {'name': 'age', 'weight': -2}
 }
 
@@ -25,18 +20,6 @@ def read_password_list(filename: str) -> set:
     """Read a list of passwords from a file and return as a set."""
     with open(filename) as f:
         return {line.strip().lower() for line in f}
-
-
-def is_password_compromised(password):
-    sha256_hash = hashlib.sha256(password.encode('utf-8')).hexdigest().upper()
-    prefix, suffix = sha256_hash[:5], sha256_hash[5:]
-    response = requests.get(f'https://api.pwnedpasswords.com/range/{prefix}')
-    if response.status_code != 200:
-        raise RuntimeError('Failed to check password')
-    hashes = (line.split(':') for line in response.text.splitlines())
-    count = next((int(count) for hash_, count in hashes if hash_.upper() == suffix), 0)
-    return count > 0
-
 
 # Load common passwords and dictionary words
 COMMON_PASSWORDS = read_password_list('common_passwords.txt')
@@ -70,12 +53,6 @@ def calculate_password_strength(password, creation_date=None):
         feedback.append('Your password is a dictionary word.')
         score += CATEGORIES['dictionary']['weight']
     
-    # Check if password has been leaked in a data breach
-    if 'breached_password' in zxcvbn(password):
-        if zxcvbn(password)['breached_password']:
-            feedback.append('Your password has been leaked in a data breach.')
-            score += CATEGORIES['leaked']['weight']
-    
     # Calculate score percentage
     score_percent = round(score / sum(cat['weight'] for cat in CATEGORIES.values()) * 100)
 
@@ -92,24 +69,20 @@ def calculate_password_strength(password, creation_date=None):
     
     # Construct feedback message
     if score_percent < 20: 
-        feedback.append('Your password is very weak.')
+        feedback.append('Your password is very strong.')
     elif score_percent < 40: 
-        feedback.append('Your password is weak.')
+        feedback.append('Your password is stong')
     elif score_percent < 60: 
         feedback.append('Your password is okay, but it can be improved.')
-    elif score_percent < 80:  
-        feedback.append('Your password is strong.')
+    elif score_percent < 80:
+        feedback.append('Your password is weak.')
     else: 
-        feedback.append('Your password is very strong.')
+        feedback.append('Your password is very weak.')
 
     return {'score': max(0, score), 'feedback': '\n'.join(feedback)}
 
 if __name__ == '__main__':
     password = getpass.getpass(prompt='Enter your password: ')
-    if is_password_compromised(password):
-        print('Your Password has been compromised')
-    else:
-        print('Your password has not been compromised')
     result = calculate_password_strength(password)
     print(f'Score: {result["score"]}')
     print(result['feedback'])
