@@ -25,4 +25,4 @@ Contributions are welcome! If you find a bug or have an idea for a new feature, 
 This project is licensed under the MIT License. See the LICENSE file for more information.
 
 # Acknowledgements
-This script uses the zxcvbn library to evaluate password strength and the Have I Been Pwned? API to check if a password has been leaked in a data breach.
+This script uses the zxcvbn library to evaluate password strength
